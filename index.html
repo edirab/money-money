@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Money simple</title>
+    <!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+</head>
+<body>
+
+
+    <div id="canvas-holder" style="width:40%; margin:0 auto;">
+
+            <h3>Калькулятор денег с использованием Chart.js</h3>
+
+        <table>
+            <tr>
+                <td><label for="on_debet">На карте</label></td>
+                <td><input type="text" id="on_debet"></td>
+            </tr>
+            <tr>
+                <td><label for="in_dollars">В долларах</label></td>
+                <td><input type="text" id="in_dollars"></td>
+            </tr>
+            <tr>
+                <td><label for="in_euro">В евро</label></td>
+                <td><input type="text" id="in_euro"></td>
+            </tr>
+            <tr>
+                <td><label for="in_safe">В сейфе</label></td>
+                <td><input type="text" id="in_safe"></td>
+            </tr>
+            <tr>
+                <td><label for="in_wallet">В кошельке</label></td>
+                <td><input type="text" id="in_wallet"></td>
+            </tr>
+
+            <tr>
+                <td><button type="button" id="button" onclick="update_chart()">Отрисовать</button></td>
+            </tr>
+        </table>
+
+        <canvas id="moneyChart" width="400" height="400"></canvas>
+
+        <div style="margin:0 auto;">
+            <p id="total" style=" margin:0 auto;" ></p>
+        </div>
+
+    </div>
+
+
+    <!--<script type="text/javascript" scr="Chart.js"></script>-->
+    <script>
+        
+        var global_sum = 0;
+        var ctx2 = document.getElementById("moneyChart").getContext('2d');
+
+        cash_name = ["На карте", "В долларах", "В евро", "Наличные в сейфе", "В кошельке"];
+        cahs_persents = new Array(cash_name.length);
+        cash_label = new Array(cash_name.length);
+        cash_input_id = ["on_debet", "in_dollars", "in_euro", "in_safe", "in_wallet"];
+        cash_data = [46000, 600*67, 770*75, 25000, 2300];
+
+        // Prepopulating inputs
+        for (var i = 0; i < cash_label.length; i++){
+            document.getElementById(cash_input_id[i]).value = String(cash_data[i]);
+        }
+
+        countSum();
+        countPercent();
+
+        var moneyDoughnutChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+            labels: cash_label,
+                datasets: [{
+                label: '# of Votes',
+                data: cash_data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255,99,132,1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {}
+        });
+
+        // Count summ
+        function countSum(){
+            global_sum = 0;
+            for (var i = 0; i < cash_data.length; i++ ){
+                global_sum += cash_data[i];
+                //alert(sum);
+            }
+            //alert(sum);
+            document.getElementById("total").innerHTML = "Всего " + String(global_sum) + " руб.";
+        }
+
+        function countPercent() {
+            for (var i = 0; i < cash_data.length; i++ ){
+                var amount_in_percent = cash_data[i]/global_sum * 100;
+                amount_in_percent = amount_in_percent.toFixed(1);
+                cash_label[i] = cash_name[i] +  " - " + String(amount_in_percent)+ "%: ";
+            }
+        }
+
+        document.getElementById('button').addEventListener('click', function(){
+            for (var i = 0; i < cash_data.length; i++ ){
+                cash_data[i] = Number( document.getElementById(cash_input_id[i]).value);
+            }
+
+            countSum();
+            countPercent();
+            moneyDoughnutChart.update();
+        });
+
+    </script>
+
+</body>
+</html>
