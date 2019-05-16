@@ -2,54 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Money simple</title>
-    <!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+    <title>Money visual</title>
+        <script type="text/javascript" src="Chart.js"></script>
+        <script type="text/javascript" src="jquery.js"></script>
+        <script src="bootstrap.js"></script>
+        <link rel="stylesheet" href="bootstrap.css">
 </head>
+
 <body>
+<div class="container">
 
+    <div class="row">
+        <div class="col-12">
+            <br/>
+            <h4 class="text-center">Визуализация активов с использованием Chart.js</h4>
+        </div>
+    </div>
+    <br/>
 
-    <div id="canvas-holder" style="width:40%; margin:0 auto; max-height: 500px;">
+    <div class="row">
+        <div class="col-6">
+            <div style="width:70%; margin:0 auto;">
 
-            <h3>Калькулятор денег с использованием Chart.js</h3>
+                    <form>
+                        <div class="form-group">
+                            <table class="table  table-sm" id="inputs">
+                                <tr>
+                                    <td><label for="on_debet">На карте</label></td>
+                                    <td><input type="text" class="form-control-sm" id="on_debet"></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="in_dollars">В долларах</label></td>
+                                    <td><input type="text" class="form-control-sm" id="in_dollars"></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="in_euro">В евро</label></td>
+                                    <td><input type="text" class="form-control-sm" id="in_euro"></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="in_safe">В сейфе</label></td>
+                                    <td><input type="text" class="form-control-sm" id="in_safe"></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="in_wallet">В кошельке</label></td>
+                                    <td><input type="text" class="form-control-sm" id="in_wallet"></td>
+                                </tr>
 
-        <table id="inputs">
-            <tr>
-                <td><label for="on_debet">На карте</label></td>
-                <td><input type="text" id="on_debet"></td>
-            </tr>
-            <tr>
-                <td><label for="in_dollars">В долларах</label></td>
-                <td><input type="text" id="in_dollars"></td>
-            </tr>
-            <tr>
-                <td><label for="in_euro">В евро</label></td>
-                <td><input type="text" id="in_euro"></td>
-            </tr>
-            <tr>
-                <td><label for="in_safe">В сейфе</label></td>
-                <td><input type="text" id="in_safe"></td>
-            </tr>
-            <tr>
-                <td><label for="in_wallet">В кошельке</label></td>
-                <td><input type="text" id="in_wallet"></td>
-            </tr>
+                                <tr>
+                                    <td><button type="button" class="btn btn-primary mb-2" id="button">Отрисовать</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </form>
+            </div>
 
-            <tr>
-                <td><button type="button" id="button">Отрисовать</button></td>
-            </tr>
-        </table>
-
-        <canvas id="moneyChart" width="400" height="400"></canvas>
-
-        <div style="margin:0 auto;">
-            <p id="total" style=" margin:0 auto;" ></p>
+            <div class="row">
+                <div class="col-6">
+                    <p>1 USD = <span id="usd"></span> руб.</p>
+                </div>
+                <div class="col-6">
+                    <p>1 EUR = <span id="eur"></span> руб.</p>
+                </div>
+            </div>
         </div>
 
-    </div>
+
+        <div class="col-6">
+            <div id="canvas-holder" style="width:100%; margin:0 auto; max-height: 500px;">
+                <canvas id="moneyChart" width="400" height="400"></canvas>
+
+                <br/>
+                <div style="width:40%; margin:0 auto;">
+                    <span id="total" ></span>
+                </div>
+            </div>
+        </div>
 
 
-    <!--<script type="text/javascript" scr="Chart.js"></script>-->
+    </div> <!--row end-->
+</div>
+
     <script type="text/javascript">
         
         var global_sum = 0;
@@ -64,7 +96,7 @@
         exchange_coeff = [1, 67, 75, 1, 1];
 
         // Массив дял процентов
-        cahs_perсents = new Array(cash_name.length);
+        cash_percents = new Array(cash_name.length);
         // Массив для меток на графике
         cash_label = new Array(cash_name.length);
         // Метки элементов input
@@ -74,6 +106,7 @@
 
 
         checkLocalStorage();
+        getCurrencyCourse();
 
         // Prepopulating inputs
         for (var i = 0; i < cash_label.length; i++){
@@ -126,6 +159,7 @@
                 global_sum += cash_nominal[i] * exchange_coeff[i];
                 //alert(sum);
             }
+            global_sum = global_sum.toFixed(1);
             //alert(sum);
             document.getElementById("total").innerHTML = "Всего " + String(global_sum) + " руб.";
         }
@@ -175,14 +209,25 @@
             }
         }
 
+/*
         function drawInputs(){
+            getCurrencyCourse();
             for (var i = 0; i < cash_name.length; i++){
                 document.getElementById("inputs").innerHTML += "<tr><td><label for=" + String(cash_input_id[i]) + ">" + String(cash_name[i]) + "</label></td>";
-            /*
+            /!*
             *   <td><input type="text" id="on_debet"></td>
                         </tr>
-            * */
+            * *!/
             }
+        }*/
+
+        function getCurrencyCourse() {
+            $.getJSON("https://www.cbr-xml-daily.ru/daily_json.js", function(data) {
+                $('#usd').html(data.Valute.USD.Value);
+                $('#eur').html(data.Valute.EUR .Value);
+                exchange_coeff[1] = data.Valute.USD.Value;
+                exchange_coeff[2] = data.Valute.EUR.Value;
+            });
         }
 
     </script>
