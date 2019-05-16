@@ -9,11 +9,11 @@
 <body>
 
 
-    <div id="canvas-holder" style="width:40%; margin:0 auto;">
+    <div id="canvas-holder" style="width:40%; margin:0 auto; max-height: 500px;">
 
             <h3>Калькулятор денег с использованием Chart.js</h3>
 
-        <table>
+        <table id="inputs">
             <tr>
                 <td><label for="on_debet">На карте</label></td>
                 <td><input type="text" id="on_debet"></td>
@@ -36,7 +36,7 @@
             </tr>
 
             <tr>
-                <td><button type="button" id="button" onclick="update_chart()">Отрисовать</button></td>
+                <td><button type="button" id="button">Отрисовать</button></td>
             </tr>
         </table>
 
@@ -50,24 +50,39 @@
 
 
     <!--<script type="text/javascript" scr="Chart.js"></script>-->
-    <script>
+    <script type="text/javascript">
         
         var global_sum = 0;
         var ctx2 = document.getElementById("moneyChart").getContext('2d');
 
+    // Составные части объекта ДЕНЬГИ
+        // Названия на русском
         cash_name = ["На карте", "В долларах", "В евро", "Наличные в сейфе", "В кошельке"];
-        cahs_persents = new Array(cash_name.length);
+        // Величина в номинальных единицах
+        cash_nominal = [46000, 600, 770, 25000, 2300];
+        // Коэффициенты пересчёта в Рубли (!)
+        exchange_coeff = [1, 67, 75, 1, 1];
+
+        // Массив дял процентов
+        cahs_perсents = new Array(cash_name.length);
+        // Массив для меток на графике
         cash_label = new Array(cash_name.length);
+        // Метки элементов input
         cash_input_id = ["on_debet", "in_dollars", "in_euro", "in_safe", "in_wallet"];
-        cash_data = [46000, 600*67, 770*75, 25000, 2300];
+        // Массив для построения самой диаграммы
+        cash_in_rubs = new Array(cash_name.length);
+
+
+        checkLocalStorage();
 
         // Prepopulating inputs
         for (var i = 0; i < cash_label.length; i++){
-            document.getElementById(cash_input_id[i]).value = String(cash_data[i]);
+            document.getElementById(cash_input_id[i]).value = String(cash_nominal[i]);
         }
 
         countSum();
         countPercent();
+        prepareDataForChart();
 
         var moneyDoughnutChart = new Chart(ctx2, {
             type: 'doughnut',
@@ -75,7 +90,7 @@
             labels: cash_label,
                 datasets: [{
                 label: '# of Votes',
-                data: cash_data,
+                data: cash_in_rubs,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
                     'rgba(54, 162, 235, 0.2)',
@@ -98,34 +113,77 @@
         options: {}
         });
 
-        // Count summ
+
+        /*
+        *   HELPER FUNCTIONS
+        *
+        * */
+
+        // Расчёт суммы
         function countSum(){
             global_sum = 0;
-            for (var i = 0; i < cash_data.length; i++ ){
-                global_sum += cash_data[i];
+            for (var i = 0; i < cash_nominal.length; i++ ){
+                global_sum += cash_nominal[i] * exchange_coeff[i];
                 //alert(sum);
             }
             //alert(sum);
             document.getElementById("total").innerHTML = "Всего " + String(global_sum) + " руб.";
         }
 
+        // Расчёт процентов
         function countPercent() {
-            for (var i = 0; i < cash_data.length; i++ ){
-                var amount_in_percent = cash_data[i]/global_sum * 100;
+            for (var i = 0; i < cash_nominal.length; i++ ){
+                var amount_in_percent = ( cash_nominal[i] * exchange_coeff[i] ) / global_sum * 100;
                 amount_in_percent = amount_in_percent.toFixed(1);
                 cash_label[i] = cash_name[i] +  " - " + String(amount_in_percent)+ "%: ";
             }
         }
 
+        // Обработчик кнопки
         document.getElementById('button').addEventListener('click', function(){
-            for (var i = 0; i < cash_data.length; i++ ){
-                cash_data[i] = Number( document.getElementById(cash_input_id[i]).value);
+            for (var i = 0; i < cash_nominal.length; i++ ){
+                cash_nominal[i] = Number( document.getElementById(cash_input_id[i]).value);
+
+                localStorage.setItem(String(cash_name[i]), String(cash_nominal[i]));
             }
 
             countSum();
             countPercent();
+            prepareDataForChart();
             moneyDoughnutChart.update();
         });
+
+
+        // Проверка локального хранилища
+        function checkLocalStorage(){
+            try{
+                for(var i = 0; i < cash_name.length; i++){
+                    cash_value = localStorage.getItem(String(cash_name[i]));
+                    if(cash_value !== null) {
+                        cash_nominal[i] = cash_value;
+                    }
+                    else { break; }
+                }
+            }
+            catch (err){}
+        }
+
+        // Готовим данные для диаграммы
+        function prepareDataForChart() {
+            for(var i = 0; i < cash_name.length; i++){
+                cash_in_rubs[i] = cash_nominal[i] * exchange_coeff[i];
+            }
+        }
+
+        function drawInputs(){
+            for (var i = 0; i < cash_name.length; i++){
+                document.getElementById("inputs").innerHTML += "<tr><td><label for=" + String(cash_input_id[i]) + ">" + String(cash_name[i]) + "</label></td>";
+            /*
+            *   <td><input type="text" id="on_debet"></td>
+                        </tr>
+            * */
+            }
+        }
 
     </script>
 
